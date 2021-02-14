@@ -6,5 +6,5 @@ An a lot of musicians on the festival are Dutch, because it is a Dutch festival,
 
 Almost all of the songs on the playlist are recorded, so the live performances could have been different from the recorded songs. Some of the performances had different musicians on it than in the original song, and some even added a whole orchestra. This could be a problem if I want to do a research about the musicians.
 
-I think the playlist has a lot of interesting song, but one of the most interesting could be Suds & Soda by dEUS, because it is so different from the other songs.
+
 
