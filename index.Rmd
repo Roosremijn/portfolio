@@ -12,6 +12,177 @@ output:
     storyboard: true
     
 ---
+Self-similarity matrix Live forever 
+===================================
+
+Column
+-----------------------------
+
+### Pitches
+
+```{r}
+library(tidyverse)
+library(spotifyr)
+library(compmus)
+
+   Liveforever <-
+  get_tidy_audio_analysis("5IfBLN9VPPJOwcKmAZhdXe")    %>%
+       compmus_align(bars,
+                     segments) %>%                     # Change `bars`
+  select(bars
+         ) %>%                                      #   in all three
+  unnest(bars
+         ) %>%                                      #   of these lines.
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms",
+        norm = "euclidean"           # Change summary & norm.
+      )
+  ) %>%
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms",
+        norm= "euclidean"
+      )
+  )
+
+Liveforever %>%
+  compmus_self_similarity(pitches,"cosine") %>% 
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_fixed() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(x = "", y = "")
+
+
+```
+
+
+
+Column
+-----------------------------------
+
+### Timbre
+
+```{r}
+library(tidyverse)
+library(spotifyr)
+library(compmus)
+
+   Liveforever <-
+  get_tidy_audio_analysis("5IfBLN9VPPJOwcKmAZhdXe")    %>%
+       compmus_align(bars,
+                     segments) %>%                     # Change `bars`
+  select(bars
+         ) %>%                                      #   in all three
+  unnest(bars
+         ) %>%                                      #   of these lines.
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms",
+        norm = "euclidean"           # Change summary & norm.
+      )
+  ) %>%
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms",
+        norm= "euclidean"
+      )
+  )
+
+Liveforever %>%
+compmus_self_similarity(timbre, "cosine") %>% 
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_fixed() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(x = "", y = "")
+
+
+  
+```
+
+Column
+-------------------------------
+I made a self-similarity matrix for the pitch and timbre of Live forever. There are a lot of similarities in pitch, but not in timbre.
+
+Cepstogram Live forever
+=====================
+
+
+
+```{r}
+library(tidyverse)
+library(spotifyr)
+library(compmus)
+
+   Liveforever <-
+  get_tidy_audio_analysis("5IfBLN9VPPJOwcKmAZhdXe")    %>%
+       compmus_align(bars,
+                     segments) %>%                     # Change `bars`
+  select(bars
+         ) %>%                                      #   in all three
+  unnest(bars
+         ) %>%                                      #   of these lines.
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms",norm = "euclidean"              # Change summary & norm.
+      )
+  ) %>%
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms",norm= "euclidean"
+      )
+  )
+   Liveforever %>%
+  compmus_gather_timbre() %>%
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = basis,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+  scale_fill_viridis_c() +                              
+  theme_classic()
+
+
+```
+
+
 Introduction
 =======================================
 
@@ -20,19 +191,15 @@ Introduction
 In this research I want to compare the two Dutch festivals Lowlands and Pinkpop. The festivals are both pop festivals and therefore have a lot of similarities. But there are also a lot of differences, for example Pinkpop is a lot older than Lowlands. For this research I used the playlist "Pinkpop 50 jaar" and "Lowlands best of".
 
 
-Graphs
+
+
+Danceability and tempo Lowlands and pinkpop
 ====================================
 
+Column{data-width=600}
+------------------------------------
 
-
-Column {.tabset}
-----------------------------------------
-
-### Danceability and tempo Lowlands and pinkpop
-
-
-
-```{r Festivals, fig.height=10, fig.width=10, fig.align="left"}
+```{r}
 
 library(tidyverse)
 library(spotifyr)
@@ -47,36 +214,33 @@ festivals <-
   )
   festivals %>%
   mutate(mode=ifelse(mode==0,"Major", "Minor")) %>%
- ggplot(aes(tempo, danceability, color = mode)) + geom_point(size=2) + geom_smooth()  + facet_wrap(~category) + theme_classic() + geom_text(aes(
-        x = tempo,
-      y = danceability,
-      label = label),
-    data = 
-      tibble(
-        label = c("Live Forever"),
-        category = c("Lowlands"),
-        tempo = c(86.446),
-        danceability = c(0.107),
-        mode = "Major"
-      ),color = "black", size=4,hjust="left",vjust="bottom",nudge_x = 2)
+ ggplot(aes(x=tempo,
+            y=danceability,color=mode
+            )) + geom_point() + facet_wrap(~category) + geom_text(aes(x=tempo, y=danceability,label=label),
+              data = tibble(label="Live forever",category="Lowlands",tempo=86.446, danceability=0.107, mode="Major"                            ), color="black",hjust="left", nudge_x = 2, size=2
+              ) + theme_classic()
 
 ```
 
 
+Column{data-width=400}
+----------------------------------
 
-### Results 
 
 ***
 
-I compared the tempo and danceability of Lowlands and Pinkpop songs in a graph to see if tempo influences danceability. In the graph we can see that songs with a tempo of 100 to 125 bpm have the highest danceability. Faster or slower songs have a lower danceability. I also compared major and minor. There is not a big difference between major and minor songs, but on average major songs have a higher danceability. The songs "Live forever" by Oasis is an outlier, because it has a really low danceability. I think it might be interesting to research why the danceability is so low according to Spotify, because when I listen to it it sounds like a nice song to dance to.
+I compared the tempo and danceability of Lowlands and Pinkpop songs in a graph to see if tempo influences danceability. In the graph we can see that songs with a tempo of 100 to 125 bpm have the highest danceability. Faster or slower songs have a lower danceability. The songs "Live forever" by Oasis is an outlier, because it has a really low danceability. I think it might be interesting to research why the danceability is so low according to Spotify, because when I listen to it it sounds like a nice song to dance to.
+
+***
 
 
-Column{.tabset}
+Live forever chromogram
+===================================
+
+Column{data-width=600}
 ----------------------------------
 
-### Live forever chromogram
-
-```{r, fig.height=10,fig.width=10}
+```{r}
 library(spotifyr)
 library(compmus)
 Liveforever <-
@@ -102,10 +266,16 @@ Liveforever <-
 ```
 
 
-### Results
+Column{data-width=400}
+-------------------------------------
+
 ***
 
-I made a chromogram of the song Live forever by Oasis, because it was an outlier in danceability. In the chromogram it is clear that the song mostly has the same chords. The D, F and A are used a lot, so the song is probably D minor.
+I made a chromogram of the song Live forever by Oasis, because it was an outlier in danceability. In the chromogram it is clear that the song mostly has the same chords. The D, F and A are used a lot, so this suggests the song is D minor, but the song is actually in G major.
+
+***
+
+
 
 
 
