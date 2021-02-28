@@ -12,7 +12,7 @@ output:
     storyboard: true
     
 ---
-Self-similarity matrix Live forever 
+Similarity matrix 
 ===================================
 
 Column
@@ -70,13 +70,10 @@ Liveforever %>%
 
 ```
 
-
-
 Column
------------------------------------
+----------------------------
 
 ### Timbre
-
 ```{r}
 library(tidyverse)
 library(spotifyr)
@@ -132,68 +129,35 @@ Column
 -------------------------------
 I made a self-similarity matrix for the pitch and timbre of Live forever. There are a lot of similarities in pitch, but not in timbre.
 
-Cepstogram Live forever
-=====================
-
-
-
-```{r}
-library(tidyverse)
-library(spotifyr)
-library(compmus)
-
-   Liveforever <-
-  get_tidy_audio_analysis("5IfBLN9VPPJOwcKmAZhdXe")    %>%
-       compmus_align(bars,
-                     segments) %>%                     # Change `bars`
-  select(bars
-         ) %>%                                      #   in all three
-  unnest(bars
-         ) %>%                                      #   of these lines.
-  mutate(
-    pitches =
-      map(segments,
-        compmus_summarise, pitches,
-        method = "rms",norm = "euclidean"              # Change summary & norm.
-      )
-  ) %>%
-  mutate(
-    timbre =
-      map(segments,
-        compmus_summarise, timbre,
-        method = "rms",norm= "euclidean"
-      )
-  )
-   Liveforever %>%
-  compmus_gather_timbre() %>%
-  ggplot(
-    aes(
-      x = start + duration / 2,
-      width = duration,
-      y = basis,
-      fill = value
-    )
-  ) +
-  geom_tile() +
-  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
-  scale_fill_viridis_c() +                              
-  theme_classic()
-
-
-```
-
+***
 
 Introduction
 =======================================
 
-### Introduction
+Column
+-----------------------------
 
+
+### Introduction
 In this research I want to compare the two Dutch festivals Lowlands and Pinkpop. The festivals are both pop festivals and therefore have a lot of similarities. But there are also a lot of differences, for example Pinkpop is a lot older than Lowlands. For this research I used the playlist "Pinkpop 50 jaar" and "Lowlands best of".
 
+Column
+---------------------------------
+
+### Lowlands
+
+![](lowlands.jpg)
+
+### Pinkpop
+
+![](pinkpop.jpg)
 
 
 
-Danceability and tempo Lowlands and pinkpop
+
+
+
+Danceability and tempo 
 ====================================
 
 Column{data-width=600}
@@ -229,12 +193,18 @@ Column{data-width=400}
 
 ***
 
+
+
+
+
+
+
 I compared the tempo and danceability of Lowlands and Pinkpop songs in a graph to see if tempo influences danceability. In the graph we can see that songs with a tempo of 100 to 125 bpm have the highest danceability. Faster or slower songs have a lower danceability. The songs "Live forever" by Oasis is an outlier, because it has a really low danceability. I think it might be interesting to research why the danceability is so low according to Spotify, because when I listen to it it sounds like a nice song to dance to.
 
 ***
 
 
-Live forever chromogram
+Chromogram 
 ===================================
 
 Column{data-width=600}
@@ -270,6 +240,12 @@ Column{data-width=400}
 -------------------------------------
 
 ***
+
+
+
+
+
+
 
 I made a chromogram of the song Live forever by Oasis, because it was an outlier in danceability. In the chromogram it is clear that the song mostly has the same chords. The D, F and A are used a lot, so this suggests the song is D minor, but the song is actually in G major.
 
