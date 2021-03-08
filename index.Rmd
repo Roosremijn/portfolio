@@ -229,7 +229,7 @@ In the cepstogram of Live forever,we can see that the instrumental parts (especi
 ### Self-similarity Live Forever
 
 
-```{r}
+```{r figures-side, fig.show="hold", out.width="50%"}
 library(tidyverse)
 library(spotifyr)
 library(compmus)
