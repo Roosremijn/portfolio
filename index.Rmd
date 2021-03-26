@@ -10,13 +10,7 @@ output:
     theme: cerulean
 ---
 
-
-
-
-
-
 ### Introduction
-
 
 ```{r chunk3}
 # library(png)
@@ -32,403 +26,12 @@ include_graphics("pinkpop.png")
 
 ***
 
-In this research I want to compare the two Dutch festivals Lowlands and Pinkpop. The festivals are both pop festivals and therefore have a lot of similarities. But there are also a lot of differences, for example Pinkpop is a lot older than Lowlands. For this research I used the playlist "Pinkpop 50 jaar" and "Lowlands best of".
-I want to compare the festivals, and see if there are important differences, and I also want to see if there are interesting outliers in the songs of the playlists.
+In this research I want to analyse the two Dutch festivals Lowlands and Pinkpop. The festivals are both pop festivals and therefore have a lot of similarities. But there are also some differences, for example Pinkpop is a lot older than Lowlands. For this research I used the playlist "Pinkpop 50 jaar" and "Lowlands best of".
+I want to compare the festivals, and see if there are important differences, if the festivals have interesting characteristics, and if there are interesting outliers in the songs of the playlists. 
+
+To compare the two festivals, I will start with a cross validation to see how similar or different the festivals are. Then I will analyse different features of the festivals: instrumentalness, danceability, keys, popularity, and tempo. From these features, I will also chose a couple of songs to analyse, because they are outliers or because they have other interesting aspects.
 
 ***
-### Danceability 
-
-```{r}
-
-library(tidyverse)
-library(spotifyr)
-
-pinkpop<- get_playlist_audio_features("","37i9dQZF1DXb1cKZ3eM1zf")
-lowlands<-get_playlist_audio_features("","37i9dQZF1DWWB7GKDYW7V3")
-
-festivals <- 
-  bind_rows(
-    pinkpop %>% mutate(category = "Pinkpop"),
-    lowlands %>% mutate(category = "Lowlands")
-  )
-  festivals %>%
-  mutate(mode=ifelse(mode==0,"Major", "Minor")) %>%
- ggplot(aes(x=danceability, fill=category
-            )) + geom_density(alpha=0.2) +   theme_classic()
-
-```
-
-
-
-
-
-***
-
-I compared the tempo and danceability of Lowlands and Pinkpop songs in a graph to see if tempo influences danceability. In the graph we can see that most songs have a danceability between 0.5 and 0.75.  
-The difference between the two festivals is small, but the median of Lowlands is a little higher and Lowlands also has a higher standard deviation.
-
-|Festival |Standard deviation| Mean    |
-|---------|------------------|---------|
-|Lowlands |0.1694389         |0.5859926|
-|Pinkpop  |0.1518909	       |0.5550820|
-
-
-
-***
-
-  
-
-### Chromogram Live forever
-
-```{r}
-library(spotifyr)
-library(compmus)
-Liveforever <-
-  get_tidy_audio_analysis("5IfBLN9VPPJOwcKmAZhdXe") %>%
-  select(segments) %>%
-  unnest(segments) %>%
-  select(start, duration, pitches)
-  Liveforever %>%
- mutate(pitches = map(pitches, compmus_normalise, "chebyshev")) %>%
-  compmus_gather_chroma() %>% 
-  ggplot(
-    aes(
-      x = start + duration / 2,
-      width = duration,
-      y = pitch_class,
-      fill = value
-    )
-  ) +
-  geom_tile() +
-  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
-  theme_minimal() +
-  scale_fill_viridis_c()
-```
-
-
-
-***
-
-I made a chromogram of the song Live forever by Oasis, because it was an outlier in danceability. It has a really low danceability (0.107) compared to other songs. Maybe the chromogram will show why it has such a low danceability. In the chromogram it is clear that the song mostly has the same chords. The D, F and A are used a lot, so this suggests the song is D minor, but the song is actually in G major. This is probably because it does not have an exact pitch of 440 Hz. The chromogram does not show why the danceability is so low. It looks like the song as a pretty simple chord scheme, so this is not the reason why the song is not danceable.
-
-***
-### Self-similarity Live Forever
-
-
-```{r figures-side, fig.show="hold", out.width="50%"}
-library(tidyverse)
-library(spotifyr)
-library(compmus)
-
-   Liveforever <-
-  get_tidy_audio_analysis("5IfBLN9VPPJOwcKmAZhdXe")    %>%
-       compmus_align(bars,
-                     segments) %>%                     # Change `bars`
-  select(bars
-         ) %>%                                      #   in all three
-  unnest(bars
-         ) %>%                                      #   of these lines.
-  mutate(
-    pitches =
-      map(segments,
-        compmus_summarise, pitches,
-        method = "rms",
-        norm = "euclidean"           # Change summary & norm.
-      )
-  ) %>%
-  mutate(
-    timbre =
-      map(segments,
-        compmus_summarise, timbre,
-        method = "rms",
-        norm= "euclidean"
-      )
-  )
-
-Liveforever %>%
-  compmus_self_similarity(pitches,"cosine") %>% 
-  ggplot(
-    aes(
-      x = xstart + xduration / 2,
-      width = xduration,
-      y = ystart + yduration / 2,
-      height = yduration,
-      fill = d
-    )
-  ) +
-  geom_tile() +
-  coord_fixed() +
-  scale_fill_viridis_c(guide = "none") +
-  theme_classic() +
-  labs(title="Pitch similarity", 
-         x = "", y = "")
-
-
-Liveforever %>%
-compmus_self_similarity(timbre, "cosine") %>% 
-  ggplot(
-    aes(
-      x = xstart + xduration / 2,
-      width = xduration,
-      y = ystart + yduration / 2,
-      height = yduration,
-      fill = d
-    )
-  ) +
-  geom_tile() +
-  coord_fixed() +
-  scale_fill_viridis_c(guide = "none") +
-  theme_classic() +
-  labs(title="Timbre similarity",
-    x = "", y = "")
-
-```
-
-
-
-
-
-
-
-***
-
-I also made a self-similarity matrix for the pitch and timbre of Live forever by Oasis. Maybe a self-similarity matrix can show why the danceability is so low. There are a lot of similarities in pitch, but not in timbre. The song has a verse and a chorus that both come back. We can see the verse and chorus repeating in both of the graphs. After approximately 100 seconds, the guitar solo starts. The solo uses the same chords as the verse and chorus, so it has similarities in pitch, but not in timbre. Then the verse and chorus are repeated again, but this time the guitar plays through it, so there is less similarity in timbre. At the end of the song there is a checkerboard pattern in pitch, because the same chords are repeated over and over again. There is also some similarity in timbre between the end of the song and the solo, because it mostly uses guitar. If we look at both timbre and pitch, the song has a nice structure with repitition. This does not really explain why the danceability is so low.
-
-***
-
-
-
-### Histogram of different keys 
-
-```{r}
-library(tidyverse)
-library(spotifyr)
-
-pinkpop<- get_playlist_audio_features("","37i9dQZF1DXb1cKZ3eM1zf")
-lowlands<-get_playlist_audio_features("","37i9dQZF1DWWB7GKDYW7V3")
-
-festivals <- 
-  bind_rows(
-    pinkpop %>% mutate(category = "Pinkpop"),
-    lowlands %>% mutate(category = "Lowlands")
-  )
-festivals %>% mutate(mode=ifelse(mode==0,"Major", "Minor")) %>%
-  ggplot(aes(x=key_name, fill=mode)) + geom_bar() + facet_wrap(~category) + labs(x="Key", y="Count")
-    
-```
-
-***
-
-Pinkpop has a lot more songs than Lowlands, but it is still possible to see some similarities and differences between the keys of the two festivals. For Pinkpop the most common keys are c, d, and a. For Lowlands the most common keys are e, g, and a. For both of the festivals, the least common keys are d#, f#, and g#. It is also interesting that Pinkpop has more Minor songs on average.
-
-***
-
-### Chromagram Sing it back
-```{r}
-library(tidyverse)
-library(spotifyr)
-library(compmus)
-
-singitback <-
-  get_tidy_audio_analysis("53qhh1kdcX4gRBShoW4LK8") %>%
-  select(segments) %>%
-  unnest(segments) %>%
-  select(start, duration, pitches)
-singitback %>%
-  mutate(pitches = map(pitches, compmus_normalise, "euclidean")) %>%
-  compmus_gather_chroma() %>% 
-  ggplot(
-    aes(
-      x = start + duration / 2,
-      width = duration,
-      y = pitch_class,
-      fill = value
-    )
-  ) +
-  geom_tile() +
-  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
-  theme_minimal() +
-  scale_fill_viridis_c()
-
-
-``` 
-
-***
-I made a chromagram of Sing it back - Boris Dlugosch mix because it was one of the songs with the least common key, Ebm. You can see the yellow line at Ebm clearly.
-
-
-### Popularity
-```{r}
-
-library(tidyverse)
-library(spotifyr)
-
-pinkpop<- get_playlist_audio_features("","37i9dQZF1DXb1cKZ3eM1zf")
-lowlands<-get_playlist_audio_features("","37i9dQZF1DWWB7GKDYW7V3")
-
-festivals <- 
-  bind_rows(
-    pinkpop %>% mutate(category = "Pinkpop"),
-    lowlands %>% mutate(category = "Lowlands")
-  )
-  festivals %>% filter(track.popularity > 0) %>%
-  mutate(mode=ifelse(mode==0,"Major", "Minor")) %>% ggplot(aes(track.popularity, fill=category)) + geom_density(alpha=0.2) + theme_classic() 
-  
-
-
-```
-
-***
-In this graph I compared the popularity of songs on the two festivals. The average popularity of Pinkpop songs is higher and more equally spread. Lowlands has more songs with a really high or low popularity.
-
-|Festival  |Standard deviation| Mean   |
-|----------|------------------|--------|
-|Lowlands  |29.93915          |34.02593|
-|Pinkpop   |24.04180          |46.21400|
-***
-
-
-
-
-
-
-
-### Cepstogram Bad guy
-```{r}
-library(tidyverse)
-library(spotifyr)
-library(compmus)
-Badguy <-
-  get_tidy_audio_analysis("2Fxmhks0bxGSBdJ92vM42m") %>% 
-  compmus_align(bars, segments) %>%                     
-  select(bars) %>%                                     
-  unnest(bars) %>%                                     
-  mutate(
-    pitches =
-      map(segments,
-        compmus_summarise, pitches,
-        method = "rms", norm = "euclidean"             
-      )
-  ) %>%
-  mutate(
-    timbre =
-      map(segments,
-        compmus_summarise, timbre,
-        method = "rms", norm = "euclidean"             
-      )
-  )
-
-Badguy %>%
-  compmus_gather_timbre() %>%
-  ggplot(
-    aes(
-      x = start + duration / 2,
-      width = duration,
-      y = basis,
-      fill = value
-    )
-  ) +
-  geom_tile() +
-  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
-  scale_fill_viridis_c() +                              
-  theme_classic()
-```
-
-***
-
-I made a cepstogram of Bad guy because it is the most popular song of the two festivals. C02 stands for the bass at the beginning of the song and the instrumental parts in the chorus. C03 shows the singing parts. The song has a really simple structure, this is probably why it is so popular.
-
-***
-
-
-### Tempo 
-```{r}
-
-library(tidyverse)
-library(spotifyr)
-
-pinkpop<- get_playlist_audio_features("","37i9dQZF1DXb1cKZ3eM1zf")
-lowlands<-get_playlist_audio_features("","37i9dQZF1DWWB7GKDYW7V3")
-
-festivals <- 
-  bind_rows(
-    pinkpop %>% mutate(category = "Pinkpop"),
-    lowlands %>% mutate(category = "Lowlands")) 
-
-festivals %>% mutate(mode=ifelse(mode==0,"Major", "Minor")) %>% ggplot(aes(tempo, fill=category)) + geom_density(alpha=0.2) 
-
-
-```
-
-***
-The most common tempo is between 100 and 150 bpm. The mean tempo of Lowlands is a little lower than the mean tempo of Pinkpop, but the difference is really small.
-
-|Festival    |Mean    |Standard deviation|
-|------------|--------|------------------|
-|Lowlands    |121.7430|26.94370          |
-|Pinkpop     |123.3742|27.77744          |
-
-***
-
-
-
-
-
-### Don't get me wrong Novelty function 
-
-
-```{r}
-library(tidyverse)
-library(spotifyr)
-library(compmus)
-dgmw <-
-  get_tidy_audio_analysis("6Wiamk8BAAP50gAAJopsy2") %>%
-  select(segments) %>%
-  unnest(segments)
-
-dgmw %>%
-  mutate(loudness_max_time = start + loudness_max_time) %>%
-  arrange(loudness_max_time) %>%
-  mutate(delta_loudness = loudness_max - lag(loudness_max)) %>%
-  ggplot(aes(x = loudness_max_time, y = pmax(0, delta_loudness))) +
-  geom_line() +
-  xlim(0, 15) +
-  theme_minimal() +
-  labs(x = "Time (s)", y = "Novelty")
-```
-
-*** 
-I made a novelty function of the first 15 seconds of the song Don't get me wrong by the Pretenders, because it is the fastest song of the two festivals. The graph shows that the song has a really fast and steady rhythm.
-***
-
-
-### Tempogram Kids
-```{r}
-library(tidyverse)
-library(spotifyr)
-library(compmus)
-kids <- get_tidy_audio_analysis("1jJci4qxiYcOHhQR247rEU")
-kids %>%
-  tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) %>%
-  ggplot(aes(x = time, y = bpm, fill = power)) +
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +
-  labs(x = "Time (s)", y = "Tempo (BPM)") +
-  theme_classic()
-
-
-```
-
-
-
-
-
-***
-
-I made a tempogram of Kids by MGMT because it is a good representation of the two festivals. It was a really popular song in the Netherlands and it has an average tempo around 122 bpm. The song has a strong beat throughout the whole song, that is why the yellow line stays around 120. At the beginning and the end of the song there are a lot of background noises and extra instruments playing, that is why we can also see some yellow at other places in the graph. The parts of the song around 60 seconds and 200 seconds have less instruments, so it is easier to hear the beat here and the yellow line is clearer.
-
-***
-
 ### Cross validation 1
 ```{r}
 library(tidyverse)
@@ -639,6 +242,7 @@ workflow() %>%
   coord_flip() +
   theme_minimal() +
   labs(x = NULL, y = "Importance")
+
 ```
 
 ***
@@ -744,3 +348,429 @@ festival_knn %>% get_conf_mat() %>% autoplot(type = "heatmap")
 Even after looking at the 5 most important features of the two festivals (Instrumentalness,c03, c10, D#/Eb, and c09), it is still really hard to predict which song belongs to which festival. The festivals are too similar.
 
 ***
+
+### Most popular feature: instrumentalness
+```{r}
+library(tidyverse)
+library(spotifyr)
+
+pinkpop<- get_playlist_audio_features("","37i9dQZF1DXb1cKZ3eM1zf")
+lowlands<-get_playlist_audio_features("","37i9dQZF1DWWB7GKDYW7V3")
+
+festivals <- 
+  bind_rows(
+    pinkpop %>% mutate(category = "Pinkpop"),
+    lowlands %>% mutate(category = "Lowlands")
+  )
+  festivals %>%
+  mutate(mode=ifelse(mode==0,"Major", "Minor")) %>%
+ ggplot(aes(x=0,y=instrumentalness
+            )) + geom_violin() + theme_classic() + facet_wrap(~category) 
+
+```
+
+***
+
+Because instrumentalness was an important feature to show differences between the festivals, I compared the instrumentalness of the two festivals.
+This violin plot shows that Lowlands clearly has a higher instrumentalness than Pinkpop, but the instrumentalness of both of the festivals is low. I think the instrumentalness of the live festivals would be higher, but the recorded songs in the Spotify playlist that I used have a lower instrumentalness.
+The difference is instrumentalness is not big enough to predict which song belongs to which festival, as we saw in the cross validation.
+
+***
+
+
+
+
+### Danceability 
+
+```{r}
+
+library(tidyverse)
+library(spotifyr)
+
+pinkpop<- get_playlist_audio_features("","37i9dQZF1DXb1cKZ3eM1zf")
+lowlands<-get_playlist_audio_features("","37i9dQZF1DWWB7GKDYW7V3")
+
+festivals <- 
+  bind_rows(
+    pinkpop %>% mutate(category = "Pinkpop"),
+    lowlands %>% mutate(category = "Lowlands")
+  )
+  festivals %>%
+  mutate(mode=ifelse(mode==0,"Major", "Minor")) %>%
+ ggplot(aes(x=danceability, fill=category
+            )) + geom_density(alpha=0.2) +   theme_classic()
+
+```
+
+
+
+
+
+***
+
+I compared the tempo and danceability of Lowlands and Pinkpop songs in a graph to see if tempo influences danceability. In the graph we can see that most songs have a danceability between 0.5 and 0.75.  
+The difference between the two festivals is small, but the median of Lowlands is a little higher and Lowlands also has a higher standard deviation.
+
+|Festival |Standard deviation| Mean    |
+|---------|------------------|---------|
+|Lowlands |0.1694389         |0.5859926|
+|Pinkpop  |0.1518909	       |0.5550820|
+
+
+
+***
+
+  
+
+### Danceability outlier: chromogram Live forever
+
+```{r}
+library(spotifyr)
+library(compmus)
+Liveforever <-
+  get_tidy_audio_analysis("5IfBLN9VPPJOwcKmAZhdXe") %>%
+  select(segments) %>%
+  unnest(segments) %>%
+  select(start, duration, pitches)
+  Liveforever %>%
+ mutate(pitches = map(pitches, compmus_normalise, "chebyshev")) %>%
+  compmus_gather_chroma() %>% 
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = pitch_class,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+  theme_minimal() +
+  scale_fill_viridis_c()
+```
+
+
+
+***
+
+I made a chromogram of the song Live forever by Oasis, because it was an outlier in danceability. It has a really low danceability (0.107) compared to other songs. Maybe the chromogram will show why it has such a low danceability. In the chromogram it is clear that the song mostly has the same chords. The D, F and A are used a lot, so this suggests the song is D minor, but the song is actually in G major. This is probably because it does not have an exact pitch of 440 Hz. The chromogram does not show why the danceability is so low. It looks like the song as a pretty simple chord scheme, so this is not the reason why the song is not danceable.
+
+***
+### Danceability outlier: self-similarity Live Forever
+
+
+```{r figures-side, fig.show="hold", out.width="50%"}
+library(tidyverse)
+library(spotifyr)
+library(compmus)
+
+   Liveforever <-
+  get_tidy_audio_analysis("5IfBLN9VPPJOwcKmAZhdXe")    %>%
+       compmus_align(bars,
+                     segments) %>%                     # Change `bars`
+  select(bars
+         ) %>%                                      #   in all three
+  unnest(bars
+         ) %>%                                      #   of these lines.
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms",
+        norm = "euclidean"           # Change summary & norm.
+      )
+  ) %>%
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms",
+        norm= "euclidean"
+      )
+  )
+
+Liveforever %>%
+  compmus_self_similarity(pitches,"cosine") %>% 
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_fixed() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(title="Pitch similarity", 
+         x = "", y = "")
+
+
+Liveforever %>%
+compmus_self_similarity(timbre, "cosine") %>% 
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_fixed() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(title="Timbre similarity",
+    x = "", y = "")
+
+```
+
+
+
+
+
+
+
+***
+
+I also made a self-similarity matrix for the pitch and timbre of Live forever by Oasis. Maybe a self-similarity matrix can show why the danceability is so low. There are a lot of similarities in pitch, but not in timbre. The song has a verse and a chorus that both come back. We can see the verse and chorus repeating in both of the graphs. After approximately 100 seconds, the guitar solo starts. The solo uses the same chords as the verse and chorus, so it has similarities in pitch, but not in timbre. Then the verse and chorus are repeated again, but this time the guitar plays through it, so there is less similarity in timbre. At the end of the song there is a checkerboard pattern in pitch, because the same chords are repeated over and over again. There is also some similarity in timbre between the end of the song and the solo, because it mostly uses guitar. If we look at both timbre and pitch, the song has a nice structure with repitition. This does not really explain why the danceability is so low.
+
+***
+
+
+
+### Histogram of different keys 
+
+```{r}
+library(tidyverse)
+library(spotifyr)
+
+pinkpop<- get_playlist_audio_features("","37i9dQZF1DXb1cKZ3eM1zf")
+lowlands<-get_playlist_audio_features("","37i9dQZF1DWWB7GKDYW7V3")
+
+festivals <- 
+  bind_rows(
+    pinkpop %>% mutate(category = "Pinkpop"),
+    lowlands %>% mutate(category = "Lowlands")
+  )
+festivals %>% mutate(mode=ifelse(mode==0,"Major", "Minor")) %>%
+  ggplot(aes(x=key_name, fill=mode)) + geom_bar() + facet_wrap(~category) + labs(x="Key", y="Count")
+    
+```
+
+***
+
+Pinkpop has a lot more songs than Lowlands, but it is still possible to see some similarities and differences between the keys of the two festivals. For Pinkpop the most common keys are c, d, and a. For Lowlands the most common keys are e, g, and a. For both of the festivals, the least common keys are d#, f#, and g#. It is also interesting that Pinkpop has more Minor songs on average.
+
+***
+
+### Key outlier: chromagram Sing it back
+```{r}
+library(tidyverse)
+library(spotifyr)
+library(compmus)
+
+singitback <-
+  get_tidy_audio_analysis("53qhh1kdcX4gRBShoW4LK8") %>%
+  select(segments) %>%
+  unnest(segments) %>%
+  select(start, duration, pitches)
+singitback %>%
+  mutate(pitches = map(pitches, compmus_normalise, "euclidean")) %>%
+  compmus_gather_chroma() %>% 
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = pitch_class,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+  theme_minimal() +
+  scale_fill_viridis_c()
+
+
+``` 
+
+***
+I made a chromagram of Sing it back - Boris Dlugosch mix because it was one of the songs with the least common key, Ebm. You can see the yellow line at Ebm clearly.
+
+
+### Popularity
+```{r}
+
+library(tidyverse)
+library(spotifyr)
+
+pinkpop<- get_playlist_audio_features("","37i9dQZF1DXb1cKZ3eM1zf")
+lowlands<-get_playlist_audio_features("","37i9dQZF1DWWB7GKDYW7V3")
+
+festivals <- 
+  bind_rows(
+    pinkpop %>% mutate(category = "Pinkpop"),
+    lowlands %>% mutate(category = "Lowlands")
+  )
+  festivals %>% filter(track.popularity > 0) %>%
+  mutate(mode=ifelse(mode==0,"Major", "Minor")) %>% ggplot(aes(track.popularity, fill=category)) + geom_density(alpha=0.2) + theme_classic() 
+  
+
+
+```
+
+***
+In this graph I compared the popularity of songs on the two festivals. The average popularity of Pinkpop songs is higher and more equally spread. Lowlands has more songs with a really high or low popularity.
+
+|Festival  |Standard deviation| Mean   |
+|----------|------------------|--------|
+|Lowlands  |29.93915          |34.02593|
+|Pinkpop   |24.04180          |46.21400|
+***
+
+
+### Popularity outlier: cepstogram Bad guy
+```{r}
+library(tidyverse)
+library(spotifyr)
+library(compmus)
+Badguy <-
+  get_tidy_audio_analysis("2Fxmhks0bxGSBdJ92vM42m") %>% 
+  compmus_align(bars, segments) %>%                     
+  select(bars) %>%                                     
+  unnest(bars) %>%                                     
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms", norm = "euclidean"             
+      )
+  ) %>%
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms", norm = "euclidean"             
+      )
+  )
+
+Badguy %>%
+  compmus_gather_timbre() %>%
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = basis,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+  scale_fill_viridis_c() +                              
+  theme_classic()
+```
+
+***
+
+I made a cepstogram of Bad guy because it is the most popular song of the two festivals. C02 stands for the bass at the beginning of the song and the instrumental parts in the chorus. C03 shows the singing parts. The song has a really simple structure, this is probably why it is so popular.
+
+***
+
+
+### Tempo 
+```{r}
+
+library(tidyverse)
+library(spotifyr)
+
+pinkpop<- get_playlist_audio_features("","37i9dQZF1DXb1cKZ3eM1zf")
+lowlands<-get_playlist_audio_features("","37i9dQZF1DWWB7GKDYW7V3")
+
+festivals <- 
+  bind_rows(
+    pinkpop %>% mutate(category = "Pinkpop"),
+    lowlands %>% mutate(category = "Lowlands")) 
+
+festivals %>% mutate(mode=ifelse(mode==0,"Major", "Minor")) %>% ggplot(aes(tempo, fill=category)) + geom_density(alpha=0.2) 
+
+
+```
+
+***
+The most common tempo is between 100 and 150 bpm. The mean tempo of Lowlands is a little lower than the mean tempo of Pinkpop, but the difference is really small.
+
+|Festival    |Mean    |Standard deviation|
+|------------|--------|------------------|
+|Lowlands    |121.7430|26.94370          |
+|Pinkpop     |123.3742|27.77744          |
+
+***
+
+
+
+
+
+### Tempo outlier: Don't get me wrong Novelty function 
+
+
+```{r}
+library(tidyverse)
+library(spotifyr)
+library(compmus)
+dgmw <-
+  get_tidy_audio_analysis("6Wiamk8BAAP50gAAJopsy2") %>%
+  select(segments) %>%
+  unnest(segments)
+
+dgmw %>%
+  mutate(loudness_max_time = start + loudness_max_time) %>%
+  arrange(loudness_max_time) %>%
+  mutate(delta_loudness = loudness_max - lag(loudness_max)) %>%
+  ggplot(aes(x = loudness_max_time, y = pmax(0, delta_loudness))) +
+  geom_line() +
+  xlim(0, 15) +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "Novelty")
+```
+
+*** 
+I made a novelty function of the first 15 seconds of the song Don't get me wrong by the Pretenders, because it is the fastest song of the two festivals. The graph shows that the song has a really fast and steady rhythm.
+***
+
+
+### Tempogram Kids
+```{r}
+library(tidyverse)
+library(spotifyr)
+library(compmus)
+kids <- get_tidy_audio_analysis("1jJci4qxiYcOHhQR247rEU")
+kids %>%
+  tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) %>%
+  ggplot(aes(x = time, y = bpm, fill = power)) +
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +
+  labs(x = "Time (s)", y = "Tempo (BPM)") +
+  theme_classic()
+
+
+```
+
+
+
+
+
+***
+
+I made a tempogram of Kids by MGMT because it is a good representation of the two festivals. It was a really popular song in the Netherlands and it has an average tempo around 122 bpm. The song has a strong beat throughout the whole song, that is why the yellow line stays around 120. At the beginning and the end of the song there are a lot of background noises and extra instruments playing, that is why we can also see some yellow at other places in the graph. The parts of the song around 60 seconds and 200 seconds have less instruments, so it is easier to hear the beat here and the yellow line is clearer.
+
+***
+
+### Conclusion
+
+The festivals Lowlands and Pinkpop are very similar. It is hard to predict if a song belongs to Pinkpop or Lowlands. The biggest difference is songs from the Lowlands playlist have a higher instrumentalness than songs from the Pinkpop playlist, but this could be different in live performances. Another difference is that the popularity of Pinkpop songs is higher than Lowlands. On other fronts - danceability, keys, and tempo - the festivals are mostly similar.
+
+
+
